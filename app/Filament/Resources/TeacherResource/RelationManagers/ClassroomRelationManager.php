@@ -5,8 +5,11 @@ namespace App\Filament\Resources\TeacherResource\RelationManagers;
 use App\Models\Classroom;
 use App\Models\Periode;
 use Filament\Forms;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Columns\ToggleColumn;
@@ -25,11 +28,38 @@ class ClassroomRelationManager extends RelationManager
                 Select::make('classrooms_id')
                     ->label('Select Class')
                     ->options(Classroom::all()->pluck('name', 'id'))
-                    ->searchable(),
+                    ->searchable()
+                    ->relationship(name: 'classroom', titleAttribute: 'name')
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->required()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', \Str::slug($state))),
+                            
+                       Hidden::make('slug'),
+                    ])
+                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
+                        return $action 
+                        ->modalHeading('Add ClassRoom')
+                        ->modalButton('Add ClassRoom')
+                        ->modalWidth('2xl');
+                    }), 
                 Select::make('periodes_id')
                     ->label('Select Periode')
                     ->options(Periode::all()->pluck('name', 'id'))
-                    ->searchable(),
+                    ->searchable()
+                    ->relationship(name: 'periode', titleAttribute: 'name')
+                    ->createOptionForm([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Add Periode')
+                            ->required(),
+                    ])
+                    ->createOptionAction(function (Forms\Components\Actions\Action $action) {
+                        return $action 
+                        ->modalHeading('Add Periode')
+                        ->modalButton('Add Periode')
+                        ->modalWidth('2xl');
+                    }),
             ]);
     }
 

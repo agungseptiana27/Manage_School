@@ -11,6 +11,18 @@ class StudentHasClass extends Model
 
     protected $guarded = [];
 
+    // public function student() {
+    //     return $this->belongsTo(Student::class, "students_id", "id");
+    // }
+
+    // public function homeroom() {
+    //     return $this->belongsTo(HomeRoom::class,"homerooms_id", "id");
+    // }
+
+    // public function periode() {
+    //     return $this->belongsTo(periode::class,"periodes_id", "id");
+    // }
+
     public function student() {
         return $this->belongsTo(Student::class, "students_id", "id");
     }

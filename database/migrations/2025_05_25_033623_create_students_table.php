@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nis')->nullable();
             $table->string('name');
             $table->enum('gender', ['Male','Female'])->default('Male');
-            $table->date('birthday')->nullable(false);
+            $table->date('birthday')->nullable();
             $table->enum('religion', ['Islam','Katolik','Protestan', 'Hidnu', 'Budha', 'Khonghucu'])->default('Islam');
             $table->string('contact')->nullable();
             $table->string('profile')->nullable();

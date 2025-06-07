@@ -16,14 +16,19 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Collection;
 use stdClass;
 
 class StudentResource extends Resource
@@ -31,6 +36,10 @@ class StudentResource extends Resource
     protected static ?string $model = Student::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+    protected static ?string $navigationGroup = 'Academic';
+
+    protected static ?int $navigationSort = 22;
 
     public static function form(Form $form): Form
     {
@@ -82,25 +91,63 @@ class StudentResource extends Resource
                     }
                 ),
                 TextColumn::make('nis')
-                        ->label('NIS'),
+                        ->label('NIS')
+                        ->searchable(),
                     TextColumn::make('name')
-                        ->label('Nama Siswa'),
-                    TextColumn::make('gender'),
+                        ->label('Nama Siswa')
+                        ->searchable(),
+                    TextColumn::make('gender')
+                        ->toggleable(isToggledHiddenByDefault: true),
                     TextColumn::make('birthday')
-                        ->label('Tanggal Lahir'),
-                    TextColumn::make('religion'),
+                        ->label('Tanggal Lahir')
+                        ->toggleable(isToggledHiddenByDefault: true),
+                        
+                    TextColumn::make('religion')
+                        ->toggleable(isToggledHiddenByDefault: true),
                     TextColumn::make('contact')
                         ->label('No. Telepon'),
                     ImageColumn::make('profile'),
+                    TextColumn::make('status')
+                        // ->toggleable(isToggledHiddenByDefault: true)
+                        ->formatStateUsing(fn (string $state): string => ucwords("{$state}")),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                ->multiple()
+                ->options([
+                    'accept' => 'Accept',
+                    'off' => 'Off',
+                    'move' => 'Move',
+                    'grade' => 'Grade',
+                ])
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                
             ])
+            // ->headerActions([
+            //     Tables\Actions\CreateAction::make(),
+            // ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    BulkAction::make('Change Status')
+                    ->icon('heroicon-m-check')
+                    ->requiresConfirmation()
+                    ->form([
+                        Select::make('Status')
+                        ->label('Status')
+                        ->options(['accept' => 'Accept', 'off' => 'Off', 'move' => 'Move', 'grade' => 'Grade'])
+                        ->required(),
+                    ])
+                    ->action(function (Collection $records, array $data) {
+                        $records->each(function ($record) use ($data) {
+                            Student::where('id', $record->id)->update([
+                                'status' => $data['Status'],
+                            ]);
+                        });
+                    }),
+                        
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
@@ -109,7 +156,7 @@ class StudentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            HomeroomRelationManager::class,
+            // HomeroomRelationManager::class,
         ];
     }
 
@@ -119,6 +166,7 @@ class StudentResource extends Resource
             'index' => Pages\ListStudents::route('/'),
             'create' => Pages\CreateStudent::route('/create'),
             'edit' => Pages\EditStudent::route('/{record}/edit'),
+            'view' => Pages\ViewStudent::route('/{record}'),
         ];
     }
     
@@ -131,5 +179,14 @@ class StudentResource extends Resource
         } else {
             return 'Student';
         }
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                TextEntry::make('nis'),
+                TextEntry::make('name'),
+            ]);
     }
 }
